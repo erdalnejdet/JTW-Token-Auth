@@ -19,7 +19,7 @@ const Input: React.FC<InputProps> = ({ label, name, className = '', placeholdert
         </label>
       </div>
       <input
-        className={`h-14 w-full rounded-36 bg-rgba-gray px-4 text-input focus:outline-none ${className}`}
+        className={`h-14 w-full border rounded bg-rgba-gray px-4 text-input focus:outline-none ${className}`}
         type={type}
         name={name}
         value={value}

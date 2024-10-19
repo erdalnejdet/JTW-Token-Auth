@@ -1,10 +1,12 @@
-import Login from "./Auth/Login"
+import Navigation from "./components/Navigation"
+import Router from "./router/router"
 
 function App() {
 return (
-<>
-<Login/>
-</>
+<div className="p-4">
+<Navigation />
+<Router />
+</div>
 )
 }
 

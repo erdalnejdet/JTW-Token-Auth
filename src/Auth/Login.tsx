@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import axios from "axios";
 
 
 
@@ -14,6 +15,13 @@ const Login = () => {
   const [visible, setVisible] = useState<boolean>(false);
 
 
+  const handleLogin=async()=>{
+   const response=await axios.post('http://localhost:3030/auth/login',{
+      username:email,
+      password:password
+    })
+    console.log('response',response)
+  }
 
   return (
     <main className="h-screen flex items-center justify-center bg-red-500">
@@ -34,7 +42,7 @@ const Login = () => {
                 <br />
                 dictum.
               </p>
-              <form className="mt-[19px]" method="post">
+              <div className="mt-[19px]">
                 <Input
                   label="Your Email"
                   name="email"
@@ -52,7 +60,7 @@ const Login = () => {
                         type={visible ? "text" : "password"}
                         value={password}
                     
-                        onChange={(e:any) => setPassword(e.target.value)}
+                        onChange={(e:React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                         placeholdertext="password"
                       />
                       <span
@@ -66,9 +74,10 @@ const Login = () => {
                 
                 <Button
                   Title="Giriş Yap"
-                  className="w-full mt-8 bg-button-color h-14 text-white rounded-8 text-sm font-semibold"
+                  onClick={handleLogin}
+                  className="w-full mt-8 bg-red-500 h-14 text-white rounded text-sm font-semibold"
                 />
-              </form>
+              </div>
 
           
                  <span className="flex mt-8 justify-center items-center gap-1.5 cursor-pointer">
