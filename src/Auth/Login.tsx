@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import Button from "../components/Button";
 import Input from "../components/Input";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { setToken } from "../store/auth";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -11,17 +14,24 @@ import axios from "axios";
 const Login = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-
+  const auth=useSelector((state:any)=>state.auth)
   const [visible, setVisible] = useState<boolean>(false);
-
-
+  const dispatch=useDispatch()
+  const navigate=useNavigate()
   const handleLogin=async()=>{
    const response=await axios.post('http://localhost:3030/auth/login',{
       username:email,
       password:password
     })
-    console.log('response',response)
+    dispatch(setToken(response.data))
   }
+
+  useEffect(()=>{
+    console.log(auth)
+    if(auth && auth.user){
+      navigate('/')
+    }
+  },[auth, navigate])
 
   return (
     <main className="h-screen flex items-center justify-center bg-red-500">
