@@ -7,9 +7,8 @@ import ProtectedRouter from './ProtectedRouter'
 import Login from '../Auth/Login'
 import { useSelector } from 'react-redux'
 
-const Router=(props:any)=>{
+const Router=()=>{
     const auth=useSelector((state:any)=>state.auth)
-    console.log('aaaa',auth)
     return(
         <Routes>
         <Route path='login'  element={<Login />}/>

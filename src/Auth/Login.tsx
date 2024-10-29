@@ -8,9 +8,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToken } from "../store/auth";
 import { useNavigate } from "react-router-dom";
 
-
-
-
 const Login = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -19,6 +16,11 @@ const Login = () => {
   const dispatch=useDispatch()
   const navigate=useNavigate()
   const handleLogin=async()=>{
+
+    if(!email || !password){
+      alert("Alanları Doldurunuz!");
+      return;
+    }
    const response=await axios.post('http://localhost:3030/auth/login',{
       username:email,
       password:password
@@ -35,11 +37,8 @@ const Login = () => {
 
   return (
     <main className="h-screen flex items-center justify-center bg-red-500">
-
       <div className="min-h-screen flex items-center flex justify-center w-full relative z-20 ">
         <div className="container flex items-center flex-col md:flex-row w-full">
-
-
           <div className="w-full p-4  max-w-[521px] mx-auto">
             <div className="bg-white rounded-2xl md:p-custom p-6 ">
               <h3 className="text-2xl mb-4 text-custom-dark font-semibold">
@@ -62,6 +61,7 @@ const Login = () => {
                     setEmail(e.target.value)
                   }
                   placeholdertext="name@company.com"
+              
                 />
                 <div className="relative">
                       <Input
@@ -91,7 +91,6 @@ const Login = () => {
 
           
                  <span className="flex mt-8 justify-center items-center gap-1.5 cursor-pointer">
-             
                  Forgot password
                  </span>
                

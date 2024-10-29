@@ -25,6 +25,7 @@ const Input: React.FC<InputProps> = ({ label, name, className = '', placeholdert
         value={value}
         onChange={onChange}
         placeholder={placeholdertext}
+        required
       />
     </div>
   );

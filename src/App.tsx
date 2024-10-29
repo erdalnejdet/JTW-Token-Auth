@@ -23,7 +23,7 @@ function App() {
         }
     },[auth])
 return (
-<div className="p-4">
+<div >
     <Navigation />
     {isReady && <Router />}
 </div>

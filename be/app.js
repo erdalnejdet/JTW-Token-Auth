@@ -74,19 +74,28 @@ app.get('/api/todo',verifyToken, async(req,res)=>{
     const allTodos=await Todo.find({})
     res.json(allTodos)
 })
-//FORM VALIDASYONU ! MIDDLEWARE TODO NEJO !
-app.post('/api/todo',verifyToken,async (req,res)=>{
-     const todo=new Todo({
-         estimate:req.body.estimate,
-         description:req.body.description,
-         title:req.body.title,
-         status:req.body.status,
-         isDone:false
-     })
-     const save=await todo.save()
-     res.json(save).status(201)
 
-})
+const validateTodo = (req, res, next) => {
+    const { estimate, description, title, status } = req.body;
+
+    if (!estimate || !description || !title || status === undefined) {
+        return res.status(400).json({ message: 'Tüm alanlar zorunludur.' });
+    }
+    next();
+};
+
+app.post('/api/todo', verifyToken, validateTodo, async (req, res) => {
+    const todo = new Todo({
+        estimate: req.body.estimate,
+        description: req.body.description,
+        title: req.body.title,
+        status: req.body.status,
+        isDone: false,
+    });
+    const save = await todo.save();
+    res.status(201).json(save);
+});
+
 
 
 app.listen(PORT,()=>{
