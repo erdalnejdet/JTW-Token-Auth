@@ -12,24 +12,46 @@ const Login = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const auth=useSelector((state:any)=>state.auth)
+  const [errors,setErrors]=useState([])
   const [visible, setVisible] = useState<boolean>(false);
   const dispatch=useDispatch()
   const navigate=useNavigate()
-  const handleLogin=async()=>{
-
-    if(!email || !password){
+  const showError=()=>{
       alert("Alanları Doldurunuz!");
-      return;
+  }
+  const handleLogin=async()=>{
+    if(!email || !password){
+      showError()
+      return
     }
-   const response=await axios.post('http://localhost:3030/auth/login',{
-      username:email,
-      password:password
-    })
-    dispatch(setToken(response.data))
+
+
+    try{
+      const response=await axios.post('http://localhost:3030/auth/login',{
+        username:email,
+        password:password
+      })
+      dispatch(setToken(response.data))
+    }catch(e:any){
+      //BAD_REQUEST
+      if(e.response.status===400){
+        /*
+        [{
+    "type": "field",
+    "value": "as",
+    "msg": "Invalid value",
+    "path": "username",
+    "location": "body"
+      }]
+        */
+        //e.response.data
+        setErrors(e.response.data)
+      }
+    }
+
   }
 
   useEffect(()=>{
-    console.log(auth)
     if(auth && auth.user){
       navigate('/')
     }
@@ -94,6 +116,15 @@ const Login = () => {
                  Forgot password
                  </span>
                
+
+             
+              {errors.length>0 &&      <div  className="flex flex-col gap-4 text-red-700">
+                    {errors.map((err:any)=>{
+                      return(
+                        <p key={err.path}>{err.path} - {err.msg}</p>
+                      )
+                    })}
+                </div>}
 
             </div>
           </div>

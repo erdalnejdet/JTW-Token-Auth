@@ -1,31 +1,21 @@
 import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
 import { setToken } from "../store/auth";
-
+import { useDispatch } from "react-redux";
 const Navigation = () => {
-    const [isReady, setIsReady] = useState(false);
-    const dispatch = useDispatch();
-    const user = useSelector((state:any) => state.auth.user); 
+    const dispatch=useDispatch()
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            dispatch(setToken(JSON.parse(storedUser)));
-        }
-        setIsReady(true);
-    }, [dispatch]);
-
-    if (!isReady) return null; 
-    
-    //hocaya sor!!
 
     return (
         <nav className="flex items-center gap-4 underline text-blue-700 font-bold">
-            {user &&  <Link to="/">Home</Link>}
-            {user && <Link to="/dashboard">Dashboard</Link>} 
-            {user &&  <Link to="/public">Public</Link>}
-            {user && <Link to="/protected">Protected</Link>} 
+            <Link to="/">Home</Link>
+           <Link to="/dashboard">Dashboard</Link>
+            <Link to="/public">Public</Link>
+           <Link to="/protected">Protected</Link>
+           <Link to="/login" onClick={()=>{
+                  dispatch(setToken(null))
+                localStorage.clear()
+            }}>Logout</Link>
+
         </nav>
     );
 };

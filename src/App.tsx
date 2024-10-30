@@ -8,6 +8,7 @@ function App() {
     const auth=useSelector((state:any)=>state.auth)
     const [isReady,setIsReady]=useState(false)
     const dispatch=useDispatch()
+    const user = useSelector((state:any) => state.auth.user); 
     useEffect(()=>{
         const _user=localStorage.getItem('user')
         if(_user){
@@ -15,7 +16,7 @@ function App() {
         }else{
             setIsReady(true)
         }
-    },[])
+    },[dispatch])
 
     useEffect(()=>{
         if(auth && auth.user){
@@ -24,7 +25,7 @@ function App() {
     },[auth])
 return (
 <div >
-    <Navigation />
+    {user &&  <Navigation />}
     {isReady && <Router />}
 </div>
 )

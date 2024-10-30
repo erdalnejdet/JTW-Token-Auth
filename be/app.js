@@ -7,6 +7,8 @@ const jwt=require('jsonwebtoken')
 const MY_SECRET='mYzJGDDkSgJT25Fo55ve6iEYK2bQhTrk'
 const connectDb=require('./db')
 const Todo=require('./todo')
+const { check,validationResult } = require('express-validator')
+
 
 const createToken=(username)=>{
     console.log('username',username)
@@ -39,11 +41,29 @@ const verifyToken=(req,res,next)=>{
 app.use(express.json({}))
 app.use(cors({}))
 
+const validateAuth = () => {
+    return [
+            check("username").isString(),
+            check("username").notEmpty(),
+            check("username").isLength({ min: 3 }),
+            check("password").isString(),
+            check("password").notEmpty(),
+            check("password").isLength({ min: 3 }),
+    ]
+};
 
+app.get('/api/todo/statuses',(req,res)=>{
+    res.status(200).json([{id:1,text:'Complated'},{id:2,text:'Pending'},{id:3,text:'Cancelled'}])
+})
 
+app.post('/auth/login',validateAuth(), (req,res)=>{
 
-app.post('/auth/login',(req,res)=>{
-    console.log(req.body)
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.status(400).json(errors.array({ onlyFirstError: true }))
+        console.log('123123213')
+        return
+    }
     const _token=createToken(req.body.username)
     res.json({...req.body,token:_token}).status(200)
 })
@@ -75,16 +95,9 @@ app.get('/api/todo',verifyToken, async(req,res)=>{
     res.json(allTodos)
 })
 
-const validateTodo = (req, res, next) => {
-    const { estimate, description, title, status } = req.body;
 
-    if (!estimate || !description || !title || status === undefined) {
-        return res.status(400).json({ message: 'Tüm alanlar zorunludur.' });
-    }
-    next();
-};
 
-app.post('/api/todo', verifyToken, validateTodo, async (req, res) => {
+app.post('/api/todo', verifyToken, async (req, res) => {
     const todo = new Todo({
         estimate: req.body.estimate,
         description: req.body.description,

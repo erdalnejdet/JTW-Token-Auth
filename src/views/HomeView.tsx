@@ -8,7 +8,7 @@ const initialFormData = {
     title: "", 
     estimate: 1,
     description: "",
-    status: true,
+    status: "2",
 };
 
 const Home = () => {
@@ -19,8 +19,30 @@ const Home = () => {
     const [message, setMessage] = useState<string>("");
     const [messageType, setMessageType] = useState("");
 
+    const [statuses,setStatuses]=useState([])
     const [formData, setFormatData] = useState({ ...initialFormData });
 
+    const getStatuses=async()=>{
+        try {
+            const _res = await axios.get('http://localhost:3030/api/todo/statuses');
+            setStatuses(_res.data);
+        } catch (e: any) {
+            if (e.response.status === 401) {
+                localStorage.removeItem('user');
+                dispatch(setToken(null as never));
+                navigate('/login');
+            }
+        }
+    }
+
+    const handleUpdate=(todo)=>{
+        setFormatData(
+            {
+                ...todo,
+                status:statuses.find((item)=>item.text===todo.status)
+            }
+        )
+    }
     const getTodos = async () => {
         try {
             const _res = await axios.get('http://localhost:3030/api/todo', {
@@ -40,30 +62,48 @@ const Home = () => {
 
     useEffect(() => {
         getTodos();
+        getStatuses()
     }, []);
 
     const handleSubmit = async (event: any) => {
         event.preventDefault();
-    
-        try {
-            const _res: any = await axios.post('http://localhost:3030/api/todo', formData, {
+        if(formData._id){
+            const _status:any=statuses.find((item:any)=>item.id.toString()===formData.status.toString())?.text || ''
+            const _res: any = await axios.put(`http://localhost:3030/api/todo/${formData._id}`, {
+                ...formData,
+                status:_status
+            }, {
                 headers: {
                     'Authorization': `Bearer ${auth.user.token}`
                 }
             });
-            
-            const arr = [...data];
-            arr.push(_res.data as never);
-            setData(arr);
-            setFormatData({ ...initialFormData });
-            setMessage("Todo başarıyla eklendi!"); 
-            setMessageType("success");
-
-        } catch (error) {
-            console.error("An error occurred while submitting the form:", error);
-            setMessage("Tüm Alanlar Zorunludur"); 
-            setMessageType("error");
+            getTodos();
+        }else{
+            try {
+                const _status:any=statuses.find((item:any)=>item.id.toString()===formData.status.toString())?.text || ''
+                const _res: any = await axios.post('http://localhost:3030/api/todo', {
+                    ...formData,
+                    status:_status
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${auth.user.token}`
+                    }
+                });
+                
+                const arr = [...data];
+                arr.push(_res.data as never);
+                setData(arr);
+                setFormatData({ ...initialFormData });
+                setMessage("Todo başarıyla eklendi!"); 
+                setMessageType("success");
+    
+            } catch (error) {
+                console.error("An error occurred while submitting the form:", error);
+                setMessage("Tüm Alanlar Zorunludur"); 
+                setMessageType("error");
+            }
         }
+   
     };
     
     const totalTasks = data.length;
@@ -125,22 +165,25 @@ const Home = () => {
                     </textarea>
                 </div>
                 
-                <div className="relative z-0 w-full mb-5 flex items-center">
-                    <input 
-                        type="checkbox" 
-                        name="status"
-                        id="status" 
-                        checked={formData.status} 
-                        onChange={(e) => {
-                            setFormatData({ ...formData, status: e.target.checked }); 
-                        }} 
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" 
-                        
-                    />
-                    <label htmlFor="status" className="ml-2 text-base text-gray-700">
-                        Checked
-                    </label>
+
+                         
+                <div className="relative z-0 w-full mb-5 group">
+                        <label htmlFor="countries" className="block mb-2 text-sm font-medium text-gray-900 ">Status</label>
+        <select id="countries" 
+selected={formData.status}
+        value={formData.status}
+        onChange={(e) => { setFormatData({ ...formData, status: e.target.value }); }}
+        className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            {statuses.filter((item:any)=>item.id!==1).map((item:any)=>{
+                return(
+                    <option value={item.id}>{item.text}</option>
+                )
+            })}
+        </select>
                 </div>
+
+                
+             
 
                 <button type="submit" className="w-full py-3 text-base font-semibold text-white bg-blue-700 hover:bg-blue-800 transition duration-300 ease-in-out rounded-lg shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300">
                     Submit
@@ -153,20 +196,32 @@ const Home = () => {
                 <h3 className="text-xl font-semibold">Toplam İşler: {totalTasks}</h3>
                 <h3 className="text-xl font-semibold text-green-500">Tamamlanan İşler: {completedTasks}</h3>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
             {data.map((todo: any) => (
                     <div key={todo._id} className="bg-white rounded-2xl border p-6 relative">
                         <span className="text-sm flex justify-end absolute right-10">{new Date(todo.createdAt).toLocaleString()}</span>
                         <h2 className="text-blue-500 text-3xl">{todo.title}</h2>
-                        <p className="mt-4 text-2xl">des:{todo.description} </p>
+                        <p className="mt-4 text-2xl truncate ">des:{todo.description} </p>
                         <p className="mt-4 text-xl">Estimate: {todo.estimate} hours</p>
-                        <p className="mt-4 text-lg">Status: {todo.status ? 'Completed' : 'Pending'}</p>
+                        <p className="mt-4 text-lg">Status: {todo.status}</p>
+                        
+                <button className="w-full mb-4 py-3 text-base font-semibold text-white bg-red-700 hover:bg-red-800 transition duration-300 ease-in-out rounded-lg shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    Sil
+                </button>
+                
+                <button 
+                onClick={()=>{
+                    handleUpdate(todo)
+                }}
+                className="w-full py-3 text-base font-semibold text-white bg-purple-700 hover:bg-purple-800 transition duration-300 ease-in-out rounded-lg shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    Güncelle
+                </button>
                     </div>
                 ))}
 
+
             </div>
+            
         </div>
     </>
     );
