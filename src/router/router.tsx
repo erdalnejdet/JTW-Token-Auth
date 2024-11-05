@@ -6,12 +6,14 @@ import Protected from '../views/ProtectedView'
 import ProtectedRouter from './ProtectedRouter'
 import Login from '../Auth/Login'
 import { useSelector } from 'react-redux'
+import SignUp from '../Auth/SignUp'
 
 const Router=()=>{
     const auth=useSelector((state:any)=>state.auth)
     return(
         <Routes>
         <Route path='login'  element={<Login />}/>
+        <Route path='signup'  element={<SignUp />}/>
         <Route index element={
              <ProtectedRouter user={auth.user}>
              <Home/>

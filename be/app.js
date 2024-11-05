@@ -7,11 +7,12 @@ const jwt=require('jsonwebtoken')
 const MY_SECRET='mYzJGDDkSgJT25Fo55ve6iEYK2bQhTrk'
 const connectDb=require('./db')
 const Todo=require('./todo')
+const User=require('./user')
+
 const { check,validationResult } = require('express-validator')
 
 
 const createToken=(username)=>{
-    console.log('username',username)
     try{
         return jwt.sign({user_name:username },MY_SECRET,{
         expiresIn:'24h',
@@ -28,7 +29,6 @@ const verifyToken=(req,res,next)=>{
         try {
             const token=req.headers.authorization.split(' ')[1]
             var decoded = jwt.verify(token, MY_SECRET);
-            console.log(decoded)
             next()
           } catch(err) {
             return res.status(401).json({ msg: "UnAuthroization"});
@@ -61,17 +61,27 @@ app.post('/auth/login',validateAuth(), (req,res)=>{
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         res.status(400).json(errors.array({ onlyFirstError: true }))
-        console.log('123123213')
         return
     }
     const _token=createToken(req.body.username)
     res.json({...req.body,token:_token}).status(200)
 })
 
+
+app.post('/aıth/register',async (req,res)=>{
+    const user = new User({
+        name:req.body.name,
+        surname:req.body.surname,
+        email:req.body.email,
+        password:req.body.password
+    });
+    const save = await user.save();
+    res.status(201).json(save);
+})
+
 app.delete('/api/todo/:id',verifyToken,async(req,res)=>{
     const {id}=req.params
     const deletedTodo=await Todo.findByIdAndDelete(id)
-    console.log('deletedTodo',deletedTodo)
     res.json({message:'Kayıt silindi'})
 })
 
@@ -90,8 +100,21 @@ app.put('/api/todo/:id',verifyToken,async(req,res)=>{
 })
 
 
+app.put('/api/todo/updateIsDone/:id',verifyToken,async(req,res)=>{
+    const {id}=req.params
+    const updateTodo=await Todo.findByIdAndUpdate(id,{
+        isDone:true
+    },{
+        new: true
+    })
+    res.json(updateTodo)
+})
+
+
+
 app.get('/api/todo',verifyToken, async(req,res)=>{
-    const allTodos=await Todo.find({})
+     const filterQuery= req.query.isDone  !== undefined ? { isDone: req.query.isDone}:{}
+    const allTodos=await Todo.find(filterQuery)
     res.json(allTodos)
 })
 

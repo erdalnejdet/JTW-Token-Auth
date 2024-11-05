@@ -21,7 +21,6 @@ const Home = () => {
 
     const [statuses,setStatuses]=useState([])
     const [formData, setFormatData] = useState({ ...initialFormData });
-
     const getStatuses=async()=>{
         try {
             const _res = await axios.get('http://localhost:3030/api/todo/statuses');
@@ -35,6 +34,16 @@ const Home = () => {
         }
     }
 
+    
+    const handleDone=async (todo)=>{
+        const _res: any = await axios.put(`http://localhost:3030/api/todo/updateIsDone/${todo._id}`,{}, {
+            headers: {
+                'Authorization': `Bearer ${auth.user.token}`
+            }
+        });
+        console.log('_res',_res)
+    }
+
     const handleUpdate=(todo)=>{
         setFormatData(
             {
@@ -43,9 +52,10 @@ const Home = () => {
             }
         )
     }
-    const getTodos = async () => {
+    const getTodos = async (filter?:boolean) => {
         try {
-            const _res = await axios.get('http://localhost:3030/api/todo', {
+            console.log(filter)
+            const _res = await axios.get(filter !== undefined ? `http://localhost:3030/api/todo?isDone=${filter}`:'http://localhost:3030/api/todo', {
                 headers: {
                     'Authorization': `Bearer ${auth.user.token}`
                 }
@@ -170,7 +180,7 @@ const Home = () => {
                 <div className="relative z-0 w-full mb-5 group">
                         <label htmlFor="countries" className="block mb-2 text-sm font-medium text-gray-900 ">Status</label>
         <select id="countries" 
-selected={formData.status}
+                    selected={formData.status}
         value={formData.status}
         onChange={(e) => { setFormatData({ ...formData, status: e.target.value }); }}
         className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
@@ -193,8 +203,22 @@ selected={formData.status}
 
         <div className="container mx-auto mt-10">
             <div className="py-4 flex  gap-4 justify-between">
+                {/* */}
+
+                <div className="flex items-center gap-4">
+                <div className="cursor-pointer" onClick={()=>{
+                    getTodos(true)
+                }}>Tamamlananlar</div>
+                <div className="cursor-pointer" onClick={()=>{
+                    getTodos(false)
+                }}>Bekleyenler</div>
+                </div>
+
+                <div className="flex items-center gap-4">
                 <h3 className="text-xl font-semibold">Toplam İşler: {totalTasks}</h3>
-                <h3 className="text-xl font-semibold text-green-500">Tamamlanan İşler: {completedTasks}</h3>
+                <h3 className="text-xl font-semibold text-green-500">Tamamlanan İşler: {completedTasks}</h3> 
+                </div>
+
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.map((todo: any) => (
@@ -215,6 +239,14 @@ selected={formData.status}
                 }}
                 className="w-full py-3 text-base font-semibold text-white bg-purple-700 hover:bg-purple-800 transition duration-300 ease-in-out rounded-lg shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300">
                     Güncelle
+                </button>
+
+                <button 
+                onClick={()=>{
+                    handleDone(todo)
+                }}
+                className="w-full mt-4 py-3 text-base font-semibold text-white bg-green-700 hover:bg-green-800 transition duration-300 ease-in-out rounded-lg shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    Tamamlandı Olarak İşaretle
                 </button>
                     </div>
                 ))}
