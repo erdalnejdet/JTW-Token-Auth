@@ -18,6 +18,8 @@ const Home = () => {
     const [data, setData] = useState([]);
     const [message, setMessage] = useState<string>("");
     const [messageType, setMessageType] = useState("");
+    const [searchText,setSearchText]=useState('')
+    const [isDone,setIsDone]=useState(false)
 
     const [statuses,setStatuses]=useState([])
     const [formData, setFormatData] = useState({ ...initialFormData });
@@ -55,7 +57,7 @@ const Home = () => {
     const getTodos = async (filter?:boolean) => {
         try {
             console.log(filter)
-            const _res = await axios.get(filter !== undefined ? `http://localhost:3030/api/todo?isDone=${filter}`:'http://localhost:3030/api/todo', {
+            const _res = await axios.get(`http://localhost:3030/api/todo?isDone=${filter || false}`, {
                 headers: {
                     'Authorization': `Bearer ${auth.user.token}`
                 }
@@ -74,6 +76,8 @@ const Home = () => {
         getTodos();
         getStatuses()
     }, []);
+
+    
 
     const handleSubmit = async (event: any) => {
         event.preventDefault();
@@ -116,6 +120,21 @@ const Home = () => {
    
     };
     
+    const handleSearch=async ()=>{ // XYREF01010
+            try {
+                //https://axios-http.com/docs/cancellation
+                //throttle
+                const _res = await axios.get(`http://localhost:3030/api/todo?isDone=${isDone}&title=${searchText}`, {
+                    headers: {
+                        'Authorization': `Bearer ${auth.user.token}`
+                    }
+                });
+                setData(_res.data);
+                console.log('_res',_res)
+            } catch (error) {
+                console.log('êrror',error)
+            }
+    }
     const totalTasks = data.length;
     const completedTasks = data.filter((todo: any) => todo.status).length;
     return (
@@ -202,14 +221,37 @@ const Home = () => {
         </div>
 
         <div className="container mx-auto mt-10">
+        <div className="max-w-md mx-auto">   
+                <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only">Search</label>
+                <div className="relative">
+                    <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                        </svg>
+                    </div>
+                    <input type="search"  value={searchText} onChange={(e)=>{setSearchText(e.target.value)}} id="default-search" className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="Search ..."  />
+                    <button type="submit" onClick={handleSearch}  className="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2">Search</button>
+                </div>
+                {/* XYREF01010 */}
+        </div>
             <div className="py-4 flex  gap-4 justify-between">
                 {/* */}
 
                 <div className="flex items-center gap-4">
                 <div className="cursor-pointer" onClick={()=>{
+                    setIsDone(true)
                     getTodos(true)
                 }}>Tamamlananlar</div>
+                {/*  XA123
+                     XA456
+                     XA789   
+                tekrar tekrar olusur 
+                onClick={()=>{
+                    getTodos(true)
+                }}
+                */}
                 <div className="cursor-pointer" onClick={()=>{
+                    setIsDone(false)
                     getTodos(false)
                 }}>Bekleyenler</div>
                 </div>
@@ -220,6 +262,7 @@ const Home = () => {
                 </div>
 
             </div>
+ 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.map((todo: any) => (
                     <div key={todo._id} className="bg-white rounded-2xl border p-6 relative">

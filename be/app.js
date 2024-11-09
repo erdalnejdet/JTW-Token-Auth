@@ -113,7 +113,16 @@ app.put('/api/todo/updateIsDone/:id',verifyToken,async(req,res)=>{
 
 
 app.get('/api/todo',verifyToken, async(req,res)=>{
-     const filterQuery= req.query.isDone  !== undefined ? { isDone: req.query.isDone}:{}
+     const filterQuery= req.query.title  === undefined ? { isDone: req.query.isDone}:{ isDone: req.query.isDone, $or:[
+        {
+            title: {$regex: new RegExp(req.query.title, 'i')},
+
+        },
+        {
+            description: {$regex: new RegExp(req.query.title, 'i')},
+
+        }
+     ]}
     const allTodos=await Todo.find(filterQuery)
     res.json(allTodos)
 })
