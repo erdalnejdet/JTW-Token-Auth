@@ -1,15 +1,18 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setToken } from "../store/auth";
-
+import throttle from "../utils/throttle";
 const initialFormData = {
     title: "",
     estimate: 1,
     description: "",
     status: "2",
 };
+
+
+
 
 const Home = () => {
     const navigate = useNavigate();
@@ -20,7 +23,7 @@ const Home = () => {
     const [messageType, setMessageType] = useState("");
     const [searchText, setSearchText] = useState('')
     const [isDone, setIsDone] = useState(false)
-
+    const controllerRef=useRef(new AbortController())
     const [statuses, setStatuses] = useState([])
     const [formData, setFormatData] = useState({ ...initialFormData });
     const getStatuses = async () => {
@@ -55,25 +58,31 @@ const Home = () => {
         )
     }
     const getTodos = async (filter?: boolean) => {
+        controllerRef.current.abort(); 
+        controllerRef.current = new AbortController(); 
+
         try {
-            console.log(filter)
             const _res = await axios.get(`http://localhost:3030/api/todo?isDone=${filter || false}`, {
+                signal:controllerRef.current.signal,
                 headers: {
                     'Authorization': `Bearer ${auth.user.token}`
                 }
             });
             setData(_res.data);
         } catch (e: any) {
-            if (e.response.status === 401) {
+            if (e?.response?.status === 401) {
                 localStorage.removeItem('user');
                 dispatch(setToken(null as never));
                 navigate('/login');
             }
+            throw(e)
         }
     };
 
     useEffect(() => {
-        getTodos();
+        setInterval(() => {
+            getTodos()
+        }, 200);
         getStatuses()
     }, []);
 
@@ -137,25 +146,49 @@ const Home = () => {
     };
 
 
-    const handleSearch = async () => { // XYREF01010
+
+    const handleSearch =  () => { // XYREF01010
         try {
             //https://axios-http.com/docs/cancellation
             //throttle
-            const _res = await axios.get(`http://localhost:3030/api/todo?isDone=${isDone}&title=${searchText}`, {
+             axios.get(`http://localhost:3030/api/todo?isDone=${isDone}&title=${searchText}`, {
                 headers: {
                     'Authorization': `Bearer ${auth.user.token}`
                 }
-            });
-            setData(_res.data);
+            }).then((_res)=>{
             console.log('_res', _res)
+                setData(_res.data);
+
+            })
         } catch (error) {
             console.log('êrror', error)
         }
+
+   
+    }
+
+
+    // Throttle edilmiş fonksiyonu oluştur
+    ///abc1 
+    //abc2
+    //abc3
+    const throttledFetchData = useCallback(throttle(handleSearch,1000),[])
+
+
+    const totalTasks = data.length;
+    const completedTasks = data.filter((todo: any) => todo.status).length;
 
 
     return (
         <>
             <div className="p-8 w-full bg-gray-50 rounded-lg shadow-md">
+                <button onClick={()=>{
+                    controllerRef.current.abort()
+                    controllerRef.current=new AbortController()
+                }}>İptal et</button>
+                     <button onClick={()=>{
+                        getTodos()  
+                }}>Tekrar al</button>
                 <form className="max-w-md mx-auto" onSubmit={handleSubmit}>
                     <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Task Form</h2>
 
@@ -246,7 +279,7 @@ const Home = () => {
                             </svg>
                         </div>
                         <input type="search" value={searchText} onChange={(e) => { setSearchText(e.target.value) }} id="default-search" className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="Search ..." />
-                        <button type="submit" onClick={handleSearch} className="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2">Search</button>
+                        <button type="submit" onClick={throttledFetchData} className="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2">Search</button>
                     </div>
                     {/* XYREF01010 */}
                 </div>
